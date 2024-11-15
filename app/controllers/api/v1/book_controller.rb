@@ -123,6 +123,15 @@ module Api
             end
           end
 
+
+
+          def fetchBooksWithReturnDate
+            query = params[:book_id]
+            request =  Request.joins(:user, :book).where(book_id: query, status:1).where(users: { role: 2 }).select('requests.*, users.name AS user_name, users.email AS user_email, books.title AS book_title')
+            render json: request, status: :ok
+          end
+
+
           private
           def book_params
               params.require(:book).permit(:title, :description, :quantity, :publication_year, :library_id)

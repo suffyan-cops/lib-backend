@@ -122,6 +122,7 @@ module Api
             # render json: request, status: :ok
           end
 
+
           private
           def request_params
               params.require(:request).permit(:book_id, :user_id, :status, :returned_date)

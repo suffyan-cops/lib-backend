@@ -13,6 +13,7 @@ Rails.application.routes.draw do
           get 'fetchBookCount', to: 'book#fetchBookCount'
           get 'fetchAvailableBooksCount', to: 'book#fetchAvailableBooksCount'
           get 'search', to: 'book#search'
+          get 'fetchBooksWithReturnDate', to: 'book#fetchBooksWithReturnDate'
 
           get 'get_books_by_library_id', to: 'book#get_books_by_library_id'
         end
@@ -26,7 +27,8 @@ Rails.application.routes.draw do
       resources :request do
         collection do
           get 'issuedBooksCount', to:'request#issuedBooksCount'
-           get 'search', to: 'request#search'
+          get 'search', to: 'request#search'
+       
         end
       end
       resources :user, only: [:index, :destroy, :update] do

@@ -71,7 +71,7 @@ module Api
           end
 
 
-          def search 
+          def search
               query = params[:searchValue]
               # library = Library.where("name ILIKE? OR address ILIKE?", "%#{query}%", "%#{query}%")
               library = Library.where("name ILIKE? ", "%#{query}%")
