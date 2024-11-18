@@ -1,7 +1,7 @@
 module Api
   module V1
     class MemberController < ApplicationController
-        before_action  :authenticate_user!
+        before_action  :unauthorized_access
         # before_action :authorize_admin , only: %i[create update destroy]
            # before_action :set_challenge, only%i[show,update,destroy]
 
@@ -11,7 +11,7 @@ module Api
              else
               member = Member.where(library_id: current_user.library_id).count
              end
-             
+
              render json: member, status: :ok
            end
           def index
@@ -80,11 +80,16 @@ module Api
               params.require(:member).permit(:name, :membership_start_date, :number_of_books_issued, :email, :phone_number, :address, :library_id)
           end
 
-          def authorize_admin
-            unless current_user.email == "admin@example.com"
-              render json: {message: "Unauthorized Access!"}
-            end
+
+          def unauthorized_access
+            render json: { error: 'Access denied' }, status: :forbidden unless current_user&.role!='reader'
           end
+
+          # def authorize_admin
+          #   unless current_user.email == "admin@example.com"
+          #     render json: {message: "Unauthorized Access!"}
+          #   end
+          # end
     end
   end
 end

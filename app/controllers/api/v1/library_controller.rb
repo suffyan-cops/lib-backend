@@ -1,7 +1,7 @@
 module Api
   module V1
     class LibraryController < ApplicationController
-        before_action  :authenticate_user!
+        before_action  :unauthorized_access
         # before_action :authorize_admin , only: %i[create update destroy]
            # before_action :set_challenge, only%i[show,update,destroy]
            # 
@@ -76,6 +76,10 @@ module Api
               # library = Library.where("name ILIKE? OR address ILIKE?", "%#{query}%", "%#{query}%")
               library = Library.where("name ILIKE? ", "%#{query}%")
               render json: library, status: :ok
+          end
+
+          def unauthorized_access
+            render json: { error: 'Access denied' }, status: :unauthorized unless current_user.present?
           end
 
           private

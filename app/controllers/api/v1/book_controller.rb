@@ -1,7 +1,7 @@
 module Api
   module V1
     class BookController < ApplicationController
-        before_action  :authenticate_user!
+        before_action  :unauthorized_access
         # before_action :authorize_admin , only: %i[create update destroy]
            # before_action :set_challenge, only%i[show,update,destroy]
            # 
@@ -129,6 +129,10 @@ module Api
             query = params[:book_id]
             request =  Request.joins(:user, :book).where(book_id: query, status:1).where(users: { role: 2 }).select('requests.*, users.name AS user_name, users.email AS user_email, books.title AS book_title')
             render json: request, status: :ok
+          end
+
+          def unauthorized_access
+            render json: { error: 'Unauthorized access' }, status: :unauthorized unless current_user.present?
           end
 
 

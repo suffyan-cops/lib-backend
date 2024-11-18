@@ -1,7 +1,7 @@
 module Api
   module V1
   class UserController < ApplicationController
-    before_action :authenticate_user! # Ensure the user is authenticated
+    # before_action  :unauthorized_access
 
 
     def getReaders
@@ -52,6 +52,10 @@ module Api
     private
     def user_params
         params.require(:user).permit(:name, :email, :role, :library_id, :password)
+    end
+
+    def unauthorized_access
+      render json: { error: 'Unauthorized access' }, status: :unauthorized unless current_user.present?
     end
   end
 

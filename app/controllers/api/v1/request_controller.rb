@@ -1,7 +1,7 @@
 module Api
   module V1
     class RequestController < ApplicationController
-        before_action  :authenticate_user!
+        before_action  :unauthorized_access
         # before_action :authorize_admin , only: %i[create update destroy]
            # before_action :set_challenge, only%i[show,update,destroy]
 
@@ -14,22 +14,18 @@ module Api
             else
               issued_books_count = Request.joins(:book).where(requests: { status: 'Completed', user_id: current_user.id  }).where(books: { library_id: current_user.library_id }).distinct.count(:book_id)
             end
-           
              render json: issued_books_count, status: :ok
            end
-        
 
           def index
             select_fields = 'requests.*, books.title AS book_name, users.name AS user_name, requests.status, requests.returned_date'
             if current_user.role == "super_admin"
               requests = Request.joins(:book, :user)
                                 .select(select_fields)
-          
             elsif current_user.role == "reader"
               requests = Request.joins(:book, :user)
                                 .where(requests: {  user_id: current_user.id })
                                 .select(select_fields)
-          
             else
               requests = Request.joins(:book, :user)
                                 .where(users: { library_id: current_user.library_id })
@@ -104,7 +100,7 @@ module Api
                                   where(requests: {  user_id: current_user.id })
                                   .select(select_fields)
                                   render json: requests, status: :ok
-                              
+
               else
                 puts "sdfdsfds"
                 requests = Request.joins(:book, :user)
@@ -127,6 +123,11 @@ module Api
           def request_params
               params.require(:request).permit(:book_id, :user_id, :status, :returned_date)
           end
+
+          def unauthorized_access
+            render json: { error: 'Unauthorized access' }, status: :unauthorized unless current_user.present?
+          end
+
 
           def authorize_admin
             unless current_user.email == "admin@example.com"
