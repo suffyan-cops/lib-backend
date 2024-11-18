@@ -42,10 +42,10 @@ module Api
     end
 
 
-    def search 
+    def search
       query = params[:searchValue]
       # library = Library.where("name ILIKE? OR address ILIKE?", "%#{query}%", "%#{query}%")
-      user = User.where("name ILIKE? ", "%#{query}%")
+      user = User.where("users.name ILIKE? ", "%#{query}%").left_joins(:library).select('users.*, libraries.name as library_name, users.role as role_value')
       render json: user, status: :ok
     end
 

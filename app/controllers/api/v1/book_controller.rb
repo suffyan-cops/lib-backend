@@ -12,7 +12,6 @@ module Api
             else
               book = Book.where(library_id: current_user.library_id).count
             end
-           
              render json: book, status: :ok
            end
 
@@ -22,9 +21,9 @@ module Api
              elsif current_user.role == 'reader'
                 # book=Book.left_joins(:request).where('requests.status IS NULL OR requests.status != 1').where(books: {library_id: current_user.library_id}).distinct.count
                 book = Book.where(library_id: current_user.library_id).count
-        
+
              end
-           
+
              render json: book, status: :ok
            end
 
@@ -46,10 +45,9 @@ module Api
           def index
             # @book = Book.includes(:library).all
              if current_user.role == 'super_admin'
-                @books = Book.joins(:library).select('books.*, libraries.name as library_name')
+                @books = Book.with_library_name
              else 
-              puts current_user.inspect
-                @books  = Book.where(library_id: current_user.library_id).joins(:library).select('books.*, libraries.name as library_name') 
+                @books  = Book.by_user_library(current_user.library_id)
              end
             # render json: @book.as_json(include: :library)
             render json: @books
@@ -77,9 +75,6 @@ module Api
           end
 
           def update
-            p "*************************************"
-            puts params
-             p "*******************---------------------***************"
             book = Book.find(params[:book][:id])
           
 

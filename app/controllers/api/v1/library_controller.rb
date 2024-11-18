@@ -5,10 +5,10 @@ module Api
         # before_action :authorize_admin , only: %i[create update destroy]
            # before_action :set_challenge, only%i[show,update,destroy]
            # 
-          
+
            def fetchLibCount
               library = Library.all.count
-           
+
              render json: library, status: :ok
            end
 
@@ -59,8 +59,6 @@ module Api
           end
 
           def destroy
-            p "------------------------------------------"
-            puts params[:library][:id]
             library = Library.find(params[:library][:id])
             if library.destroy
               render json: {message:"Data Deleted Successfully!", result: library}
@@ -69,7 +67,6 @@ module Api
             end
 
           end
-
 
           def search
               query = params[:searchValue]
