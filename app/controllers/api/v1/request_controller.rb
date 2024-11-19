@@ -2,11 +2,13 @@ module Api
   module V1
     class RequestController < ApplicationController
         before_action  :unauthorized_access
-        # before_action :authorize_admin , only: %i[create update destroy]
-           # before_action :set_challenge, only%i[show,update,destroy]
 
-
-           def issuedBooksCount
+          # GET /issuedBooksCount
+          # Calculates the count of issued books based on the user's role:
+          # - Super Admin: All completed requests across all libraries.
+          # - Librarian: Completed requests for the librarian's library (distinct book IDs).
+          # - Reader: Completed requests made by the reader in their library.
+          def issuedBooksCount
             if current_user.role =='super_admin'
               issued_books_count = Request.joins(:book).where(requests: { status: 'Completed' }).count
             elsif current_user.role == 'librarian'
@@ -15,8 +17,13 @@ module Api
               issued_books_count = Request.joins(:book).where(requests: { status: 'Completed', user_id: current_user.id  }).where(books: { library_id: current_user.library_id }).distinct.count(:book_id)
             end
              render json: issued_books_count, status: :ok
-           end
+          end
 
+          # GET /requests
+          # Retrieves all requests based on the user's role:
+          # - Super Admin: All requests with book and user details.
+          # - Reader: Requests made by the current reader.
+          # - Librarian: Requests for books in the librarian's library.
           def index
             select_fields = 'requests.*, books.title AS book_name, users.name AS user_name, requests.status, requests.returned_date'
             if current_user.role == "super_admin"
@@ -34,18 +41,15 @@ module Api
             render json: requests
           end
 
+          # POST /requests
+          # Creates a new request. If the status is not 'Rejected', it reduces the book's quantity by 1.
           def create
-            # challenge = Challenge.new(title:"Lorem Ipsum 2", description:"Random Description2", start_date:Date.today, end_date:Date.tomorrow)
-            puts '**************************************'
-            puts request_params[:status]
             book_id= request_params[:book_id]
             book = Book.find_by(id: book_id )
-            puts book.inspect
             if request_params[:status]!='Rejected'
               book.quantity = (book.quantity.to_i - 1).to_s
               book.save
             end
-          
             request = Request.new(request_params)
             request.created_by = current_user.id
             if request.save
@@ -53,9 +57,10 @@ module Api
             else
               render json: {message: "Failed To Add Book!", data: request.errors}, status: :unprocessable_entity
             end
-
           end
 
+          # GET /requests/:id
+          # Fetches the details of a specific request by its ID.
           def show
             request = Request.find(params[:id])
               if request
@@ -65,10 +70,11 @@ module Api
               end
           end
 
-          def update
-            p "*************************************"
-            request = Request.find(params[:request][:id])
 
+          # PUT /requests/:id
+          # Updates a specific request by its ID.
+          def update
+            request = Request.find(params[:request][:id])
             if request.update(request_params)
               render json: {message: "Data Updated Successfully", result: request}
             else
@@ -76,8 +82,9 @@ module Api
             end
           end
 
+          # DELETE /requests/:id
+          # Deletes a specific request by its ID and increases the book's quantity by 1.
           def destroy
-
             request = Request.find(params[:request][:id])
             book = Book.find_by(id: request.book_id )
             book.quantity = (book.quantity.to_i + 1).to_s
@@ -87,15 +94,19 @@ module Api
             else
               render json: {message:"Data not Deleted", result: request.errors}
             end
-
           end
 
+          # GET /requests/search
+          # Searches requests based on a status or retrieves all requests if no search term is provided.
+          # - Statuses: 'submitted', 'completed', 'rejected'.
+          # - Role-based access: 
+          #   - Super Admin: All requests.
+          #   - Reader: Only requests by the reader.
+          #   - Librarian: Requests for the librarian's library.
           def search 
             select_fields = 'requests.*, books.title AS book_name, users.name AS user_name, requests.status, requests.returned_date'
             statuses = ['submitted', 'completed', 'rejected']
             query = params[:searchValue]&.strip&.downcase
-            puts "query #{query}"
-        
             if query.present? && statuses.include?(query)
               puts query
               status_index = statuses.index(query)
@@ -135,7 +146,6 @@ module Api
                 render json: request, status: :ok
               end
             end
-            # render json: request, status: :ok
           end
 
 

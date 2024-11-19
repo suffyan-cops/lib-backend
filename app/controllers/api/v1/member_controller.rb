@@ -2,10 +2,13 @@ module Api
   module V1
     class MemberController < ApplicationController
         before_action  :unauthorized_access
-        # before_action :authorize_admin , only: %i[create update destroy]
-           # before_action :set_challenge, only%i[show,update,destroy]
 
-           def fetchMemberCount
+
+          # GET /fetchMemberCount
+          # Fetches the total count of members.
+          # - For super_admin: counts all members.
+          # - For other users: counts members belonging to the current user's library.
+          def fetchMemberCount
              if current_user.role == 'super_admin'
                 member = Member.all.count
              else
@@ -13,22 +16,26 @@ module Api
              end
 
              render json: member, status: :ok
-           end
+          end
+
+          # GET /members
+          # Fetches a list of members.
+          # - For super_admin: fetches all members with their associated library names.
+          # - For other users: fetches members belonging to the current user's library.
           def index
-            # @member = Member.all
             if current_user.role == 'super_admin'
               @member = Member.joins(:library).select('members.*, libraries.name as library_name')
             else 
             puts current_user.inspect
               @member  = Member.where(library_id: current_user.library_id).joins(:library).select('members.*, libraries.name as library_name') 
-           end
+            end
             render json: @member
           end
 
+          # POST /members
+          # Creates a new member with the provided parameters.
           def create
-            # challenge = Challenge.new(title:"Lorem Ipsum 2", description:"Random Description2", start_date:Date.today, end_date:Date.tomorrow)
             member = Member.new(member_params)
-
             if member.save
               render json: {message: "Data Succesfully added!", data: member}
             else
@@ -37,6 +44,9 @@ module Api
 
           end
 
+
+          # GET /members/:id
+          # Fetches the details of a specific member by their ID.
           def show
             member = Member.find(params[:id])
               if member
@@ -46,10 +56,11 @@ module Api
               end
           end
 
-          def update
-            p "*************************************"
-            member = Member.find(params[:member][:id])
 
+          # PUT /members/:id
+          # Updates the details of a specific member by their ID.
+          def update
+            member = Member.find(params[:member][:id])
             if member.update(member_params)
               render json: {message: "Data Updated Successfully", result: member}
             else
@@ -57,6 +68,8 @@ module Api
             end
           end
 
+          # DELETE /members/:id
+          # Deletes a specific member by their ID.
           def destroy
             member = Member.find(params[:member][:id])
             if member.destroy
@@ -67,7 +80,9 @@ module Api
 
           end
 
-
+          # GET /members/search
+          # Searches members by their name (case-insensitive).
+          # Supports partial matches for the name.
           def search
             query = params[:searchValue]
             # library = Library.where("name ILIKE? OR address ILIKE?", "%#{query}%", "%#{query}%")
@@ -84,12 +99,6 @@ module Api
           def unauthorized_access
             render json: { error: 'Access denied' }, status: :forbidden unless current_user&.role!='reader'
           end
-
-          # def authorize_admin
-          #   unless current_user.email == "admin@example.com"
-          #     render json: {message: "Unauthorized Access!"}
-          #   end
-          # end
     end
   end
 end
